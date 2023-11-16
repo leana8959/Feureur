@@ -13,7 +13,7 @@ import os
 intents = discord.Intents.default()
 # Cette ligne active l'intent pour les "guilds" (serveurs), ce qui signifie que le bot sera informe de tous les changements au sein du serveur.
 intents.guilds = True
-# Cette ligne active l'intent pour les "guild_messages" (messages de salon), 
+# Cette ligne active l'intent pour les "guild_messages" (messages de salon),
 # ce qui signifie que le bot sera informe de tous les messages dans les salons auxquels il a acces.
 intents.guild_messages = True
 # Cette ligne cree un objet "bot" pour se connecter a Discord en utilisant les intents définis dans la variable intents.
@@ -24,13 +24,51 @@ bot = discord.Client(intents=intents)
 ###################################################
 
 # Liste de String contenant une liste de mots autorises
-authorised_words = ['quoiqu','quoique','quoi que ce','quoi que se','piquoit','pouquoi','séquoia','taquoir','carquois','claquoir','dacquois','iroquois','manquoit','marquoir','narquois','pourquoi','quoi que','séquoias','taquoirs','claquoirs','iroquoise','marquoirs','narquoise','turquoise','iroquoises','narquoises','turquoises','métaséquoia','tu-sais-quoi','narquoisement','je-ne-sais-quoi']
+authorised_words = [
+    'quoiqu',
+    'quoique',
+    'quoi que ce',
+    'quoi que se',
+    'piquoit',
+    'pouquoi',
+    'séquoia',
+    'taquoir',
+    'carquois',
+    'claquoir',
+    'dacquois',
+    'iroquois',
+    'manquoit',
+    'marquoir',
+    'narquois',
+    'pourquoi',
+    'quoi que',
+    'séquoias',
+    'taquoirs',
+    'claquoirs',
+    'iroquoise',
+    'marquoirs',
+    'narquoise',
+    'turquoise',
+    'iroquoises',
+    'narquoises',
+    'turquoises',
+    'métaséquoia',
+    'tu-sais-quoi',
+    'narquoisement',
+    'je-ne-sais-quoi'
+]
 # Liste de gifs repondant 'feur'
-tab_gif = ["https://tenor.com/view/feur-gif-23547897", "https://tenor.com/view/feur-theobabac-quoi-gif-24294658", "https://tenor.com/view/feur-meme-gif-24407942", "https://tenor.com/view/multicort-feur-gif-23304150"]
+tab_gif = [
+    "https://tenor.com/view/feur-gif-23547897",
+    "https://tenor.com/view/feur-theobabac-quoi-gif-24294658",
+    "https://tenor.com/view/feur-meme-gif-24407942",
+    "https://tenor.com/view/multicort-feur-gif-23304150"
+]
 
 ###################################################
 ###                  fonctions                  ###
 ###################################################
+
 
 def returned_message(str):
     '''
@@ -50,7 +88,7 @@ def returned_message(str):
     elif 'quoi' not in liste and ('anti' in liste and 'feur' in liste):
         return "Pourquoi se protéger si l'on n'utilise même pas le q-word ? 🙄"
     elif 'quoi' in liste:
-        n = random.randint(0,11)
+        n = random.randint(0, 11)
         if n in range(4):
             return tab_gif[n]
         else:
@@ -65,15 +103,19 @@ def returned_message(str):
 ### fonctions d'evenement lies au bot Discord  ###
 ##################################################
 
+
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user}')
     print("liste des salons disponibles :\n[serveur] : [salon]")
-    for guild in bot.guilds: # parcourt les serveurs ou le bot est integre
-        for channel in guild.text_channels: # parcourt les salons du serveur
-            if channel.permissions_for(guild.me).read_messages: # on regarde ceux ou le bot peut lire les messages
-                if channel.permissions_for(guild.me).send_messages: # on regarde ceux ou le bot peut envoyer des messages
+    for guild in bot.guilds:  # parcourt les serveurs ou le bot est integre
+        for channel in guild.text_channels:  # parcourt les salons du serveur
+            # on regarde ceux ou le bot peut lire les messages
+            if channel.permissions_for(guild.me).read_messages:
+                # on regarde ceux ou le bot peut envoyer des messages
+                if channel.permissions_for(guild.me).send_messages:
                     print(f"{guild.name} : {channel.name}")
+
 
 @bot.event
 async def on_message(message):
@@ -85,27 +127,33 @@ async def on_message(message):
 
     # gerer la discussion privee avec le bot
     elif message.channel.type == discord.ChannelType.private and message.author != bot.user:
-        contenu = contenu.lower() # on enleve les maj
-        contenu = unidecode(contenu) # on enleve les accents
+        contenu = contenu.lower()  # on enleve les maj
+        contenu = unidecode(contenu)  # on enleve les accents
         message_to_send = returned_message(contenu)
         if message_to_send != "":
             await message.channel.send(message_to_send)
 
     # gerer la discussion dans un serveur
     else:
-        for guild in bot.guilds: # parcourt les serveurs ou le bot est integre
-            for channel in guild.text_channels: # parcourt les salons du serveur
-                if channel.permissions_for(guild.me).read_messages: # on regarde ceux ou le bot peut lire les messages
-                    if channel.permissions_for(guild.me).send_messages: # on regarde ceux ou le bot peut envoyer des messages
-                        try: # certains salons auront un message qui fera planter le code
-                            last_message = await channel.fetch_message(channel.last_message_id) # on doit recup le dernier message du salon
-                            last_message.content = unidecode(last_message.content.lower()) # enleve maj et accents
+        for guild in bot.guilds:  # parcourt les serveurs ou le bot est integre
+            for channel in guild.text_channels:  # parcourt les salons du serveur
+                # on regarde ceux ou le bot peut lire les messages
+                if channel.permissions_for(guild.me).read_messages:
+                    # on regarde ceux ou le bot peut envoyer des messages
+                    if channel.permissions_for(guild.me).send_messages:
+                        try:  # certains salons auront un message qui fera planter le code
+                            # on doit recup le dernier message du salon
+                            last_message = await channel.fetch_message(channel.last_message_id)
+                            last_message.content = unidecode(
+                                last_message.content.lower())  # enleve maj et accents
                             if last_message.author != bot.user:
-                                message_to_send = returned_message(last_message.content)
+                                message_to_send = returned_message(
+                                    last_message.content)
                                 if message_to_send != "":
                                     await channel.send(message_to_send)
                         except:
-                            print(f"error detected in {channel.name} but program still running")
+                            print(
+                                f"error detected in {channel.name} but program still running")
 
 ###################################################
 ###                  lancement                  ###

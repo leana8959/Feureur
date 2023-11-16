@@ -8,15 +8,12 @@ import os
 ###                  prérequis                  ###
 ###################################################
 
-# Definit une variable intents qui contient les "intents" par defaut de la bibliotheque discord.
-# Les intents sont des informations sur les donnees que vous voulez recevoir depuis le serveur Discord.
-intents = discord.Intents.default()
-# Cette ligne active l'intent pour les "guilds" (serveurs), ce qui signifie que le bot sera informe de tous les changements au sein du serveur.
+# Read more:
+# https://discordpy.readthedocs.io/en/stable/api.html?highlight=intent#discord.Intents
+intents = discord.Intents()
 intents.guilds = True
-# Cette ligne active l'intent pour les "guild_messages" (messages de salon),
-# ce qui signifie que le bot sera informe de tous les messages dans les salons auxquels il a acces.
-intents.guild_messages = True
-# Cette ligne cree un objet "bot" pour se connecter a Discord en utilisant les intents définis dans la variable intents.
+intents.messages = True
+intents.message_content = True
 bot = discord.Client(intents=intents)
 
 ###################################################
@@ -70,7 +67,7 @@ tab_gif = [
 ###################################################
 
 
-def returned_message(str):
+def returned_message(content: str):
     '''
     Cette fonction renvoie une chaine de caracteres que le bot enverra dans le chat, personnalise en fonction du message passe en parametre
     Arguments :
@@ -78,7 +75,7 @@ def returned_message(str):
     Retourne :
         str (String) : une chaine de caracteres qui sera publie dans le chat par le bot
     '''
-    liste = str.split()
+    liste = content.split()
     if 'quoi' in liste and ('antifeur' in liste or 'anti-feur' in liste):
         return ''
     elif 'quoi' in liste and ('anti' in liste and 'feur' in liste):
@@ -97,7 +94,7 @@ def returned_message(str):
         if (word in liste):
             return "...👀"
     else:
-        return ""
+        return None
 
 ##################################################
 ### fonctions d'evenement lies au bot Discord  ###
@@ -110,50 +107,22 @@ async def on_ready():
     print("liste des salons disponibles :\n[serveur] : [salon]")
     for guild in bot.guilds:  # parcourt les serveurs ou le bot est integre
         for channel in guild.text_channels:  # parcourt les salons du serveur
-            # on regarde ceux ou le bot peut lire les messages
-            if channel.permissions_for(guild.me).read_messages:
-                # on regarde ceux ou le bot peut envoyer des messages
-                if channel.permissions_for(guild.me).send_messages:
-                    print(f"{guild.name} : {channel.name}")
+            print(f"{guild.name} : {channel.name}")
 
 
 @bot.event
-async def on_message(message):
+async def on_message(message: discord.Message):
     contenu = message.content
 
     # pour eviter que le bot ne se reponde a lui-meme
-    if message.author == bot.user:
+    if message.author.bot:
         return
 
-    # gerer la discussion privee avec le bot
-    elif message.channel.type == discord.ChannelType.private and message.author != bot.user:
-        contenu = contenu.lower()  # on enleve les maj
-        contenu = unidecode(contenu)  # on enleve les accents
-        message_to_send = returned_message(contenu)
-        if message_to_send != "":
-            await message.channel.send(message_to_send)
-
-    # gerer la discussion dans un serveur
-    else:
-        for guild in bot.guilds:  # parcourt les serveurs ou le bot est integre
-            for channel in guild.text_channels:  # parcourt les salons du serveur
-                # on regarde ceux ou le bot peut lire les messages
-                if channel.permissions_for(guild.me).read_messages:
-                    # on regarde ceux ou le bot peut envoyer des messages
-                    if channel.permissions_for(guild.me).send_messages:
-                        try:  # certains salons auront un message qui fera planter le code
-                            # on doit recup le dernier message du salon
-                            last_message = await channel.fetch_message(channel.last_message_id)
-                            last_message.content = unidecode(
-                                last_message.content.lower())  # enleve maj et accents
-                            if last_message.author != bot.user:
-                                message_to_send = returned_message(
-                                    last_message.content)
-                                if message_to_send != "":
-                                    await channel.send(message_to_send)
-                        except:
-                            print(
-                                f"error detected in {channel.name} but program still running")
+    contenu = contenu.lower()  # on enleve les maj
+    contenu = unidecode(contenu)  # on enleve les accents
+    message_to_send = returned_message(contenu)
+    if message_to_send:
+        await message.channel.send(message_to_send)
 
 ###################################################
 ###                  lancement                  ###
